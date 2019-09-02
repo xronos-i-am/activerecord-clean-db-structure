@@ -38,6 +38,18 @@ module ActiveRecordCleanDbStructure
       # Remove useless comment lines
       dump.gsub!(/^--$/, '')
 
+      # remove comments
+      dump.gsub!(/^-- Name.+ Type: (COMMENT|EXTENSION|INDEX|TABLE|TYPE)$/, '')
+
+      ### NEED FOR TEST DATABASE `rails db:setup`
+        # remove server and user for FDW
+        dump.gsub!(/^-- Name: [\w ]+; Type: SERVER.+?;/m, '')
+        dump.gsub!(/^-- Name: [\w ]+; Type: USER MAPPING.+?;/m, '')
+
+        # FDW table to native table
+        dump.gsub!(/^CREATE FOREIGN TABLE (.+?)\nSERVER.+?;/m, "CREATE TABLE \\1;")
+      ###
+
       unless options[:ignore_ids] == true
         # Reduce noise for id fields by making them SERIAL instead of integer+sequence stuff
         # Skips standalone sequences
